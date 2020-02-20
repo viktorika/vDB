@@ -1,24 +1,98 @@
 #pragma once
 
-typedef void * DBHANDLE;
+#include <string>
+#include <sys/uio.h>
+#include <functional>
 
-DBHANDLE db_open(const char *, int, ...);
-void db_close(DBHANDLE);
-char *db_fetch(DBHANDLE, const char *);
-int db_store(DBHANDLE, const char *, const char *, int);
-int db_delete(DBHANDLE, const char *);
+namespace vDB {
 
 /*
- * db_storeçš„åˆæ³•æ ‡å¿—
+ * db_storeµÄºÏ·¨±êÖ¾
+ * INSERT²åÈë
+ * REPLACEÌæ»»
+ * STOREÌæ»»»ò²åÈë
  */
-#define DB_INSERT 1  //åªæ’å…¥ä¸€ä¸ªæ–°çš„è®°å½•
-#define DB_REPLACE 2 //æ›¿æ¢ä¸€ä¸ªå·²å­˜åœ¨çš„è®°å½•
-#define DB_STORE 3   //æ›¿æ¢æˆ–è€…æ’å…¥
+enum DB_STORE_FLAG{STORE_MIN_FLAG, DB_INSERT, DB_REPLACE, DB_STORE, STORE_MAX_FLAG};
+
+const int kIndex_min = 6;     //index³¤¶È×îĞ¡Îª6£¬key£¬sep£¬start£¬sep£¬length£¬\n
+const int kIndex_max = 1024;  //index×î´ó³¤¶È£¬Õâ¸ö¿ÉÒÔ×Ô¼ºµ÷½Ú
+const int kData_min = 2;      //dataµÄ×îĞ¡³¤¶ÈÎª2£¬Ò»¸ö×Ö½Ú¼ÓÒ»¸ö»»ĞĞ·û
+const int kData_max = 1024;   //dataµÄ×î´ó³¤¶È£¬¿ÉÒÔ×Ô¼ºµ÷½Ú
+
+using std::string;
+
+typedef unsigned int DBHASH;       //hashÖµÀàĞÍ
 
 /*
- * å®ç°é™åˆ¶
+ * Ò»¸ökey->valueÊı¾İ¿â£¬Êı¾İ¿â´ò¿ªºó»áÉú³ÉÁ½¸öÎÄ¼ş.idxºÍ.datÎÄ¼ş
+ * .idx´æ´¢keyºÍÆäËûÏà¹ØµÄĞÅÏ¢£¬.dat´æ´¢ÕæÕıµÄÊı¾İ
+ * keyºÍvalue¾ùÎªstringÀàĞÍ
+ * ×¢Òâ£¬ÀïÃæÓĞĞí¶àlseek²Ù×÷£¬ËùÒÔ¶ÔÍ¬Ò»¸ö¶ÔÏóÀ´ËµÕâĞ©½Ó¿Ú¶¼ÊÇ²»¿ÉÖØÈëµÄ
+ * key²»ÔÊĞí´ø:·ûºÅ
  */
-#define IDXLEN_MIN 6     //ç´¢å¼•é•¿åº¦æœ€å°ä¸º6ï¼Œkeyï¼Œsepï¼Œstartï¼Œsepï¼Œlengthï¼Œ\n
-#define IDXLEN_MAX 1024  //ç´¢å¼•æœ€å¤§é•¿åº¦ï¼Œè¿™ä¸ªå¯ä»¥è‡ªå·±è°ƒèŠ‚
-#define DATLEN_MIN 2     //æ•°æ®é•¿åº¦æœ€å°ä¸º2ï¼Œdata byteï¼Œ\n
-#define DATLEN_MAX 1024  //æ•°æ®æœ€å¤§é•¿åº¦ï¼Œéšæ„è°ƒèŠ‚
+class DB {
+public:
+	explicit DB();
+	DB(const DB&) = delete;
+	virtual ~DB();
+	/*
+	 * ´ò¿ª»òÕß´´½¨Êı¾İ¿â£¬²ÎÊıÓëopenÏµÍ³µ÷ÓÃÒ»ÖÂ
+	 * ³É¹¦·µ»ØTrueÊ§°Ü·µ»ØFalse
+	 */
+	virtual bool db_open(const string&, int, ...);
+	/*
+	 * ·ÅÆú¶ÔÊı¾İ¿âµÄ·ÃÎÊ
+	 */
+	virtual void db_close();
+	/*
+	 * ÓÃkey»ñÈ¡¶ÔÓ¦µÄvalue£¬²»´æÔÚÔò·µ»Ø¿Õstring
+	 */
+	virtual string db_fetch(const string&);
+	/*
+	 * É¾³ıÖ¸¶¨keyµÄ¼ÇÂ¼
+	 * ³É¹¦·µ»ØtrueÊ§°Ü·µ»Øfalse
+	 */
+	virtual bool db_delete(const string&);
+	/*
+	 * °Ñ¼ÇÂ¼´æ´¢µ½Êı¾İ¿âÖĞ
+	 * µÚÒ»¸ö²ÎÊıÊÇkey£¬µÚ¶ş¸ö²ÎÊıÊÇvalue£¬µÚÈı¸öÊÇ²Ù×÷µÄ±êÖ¾
+	 * ³É¹¦·µ»Ø0£¬´íÎó·µ»Ø-1£¬Èç¹û´æÔÚ¶øÇÒÖ¸¶¨ÁËDB_INSERTÔò·µ»Ø1
+	 */
+	virtual int db_store(const string&, const string&, int);
+private:
+	string pathname_;          //Êı¾İ¿âÂ·¾¶
+	//×îºóÒ»´Î¶ÁĞ´index¼ÇÂ¼Ê±µÄÇ°Ò»¸ö½ÚµãºÍºóÒ»¸ö½ÚµãµÄÆ«ÒÆÁ¿
+	off_t pre_offset_, next_offset_;
+	//db_store²»Í¬flag¶ÔÓ¦µÄÓ³Éäº¯Êı
+	std::function<int(const string&, const string&, bool, off_t)> store_function_map[STORE_MAX_FLAG];
+
+	struct Handle {
+		int fd;                //ÎÄ¼şÃèÊö·û
+		off_t offset;          //×îºóÒ»´Î¶ÁĞ´¼ÇÂ¼Ê±µÄÆ«ÒÆÁ¿
+		int length;            //×îºóÒ»´Î¶ÁĞ´µÄ¼ÇÂ¼³¤¶È
+		char *buffer;          //¶ÁĞ´¼ÇÂ¼Ê±ÓÃµÄ»º³åÇø
+	}index_, data_;            //idxÎÄ¼şºÍdatÎÄ¼ş
+
+	void _db_bind_function();
+	bool _db_allocate();
+	void _db_free();
+	DBHASH _db_hash(const string&);
+	bool _db_find(const string&, off_t);
+	off_t _db_read_ptr(off_t);
+	off_t _db_read_idx(off_t);
+	char *_db_read_data();
+	bool _db_do_delete();
+	bool _db_write_data(const char*, off_t, int);
+	bool _db_lock_and_write_data(const char*, off_t, int);
+	bool _db_write_idx(const char*, off_t, int, off_t);
+	bool _db_lock_and_write_idx(const char*, off_t, int, off_t);
+	bool _db_pre_write_idx(const char*, off_t, struct iovec*);
+	bool _db_do_write_idx(off_t, int, struct iovec*);
+	bool _db_write_ptr(off_t, off_t);
+	int _db_store_insert(const string&, const string&, bool, off_t);
+	int _db_store_replace(const string&, const string&, bool, off_t);
+	int _db_store_ins_or_rep(const string&, const string&, bool, off_t);
+	bool _db_find_and_delete_free(int, int);
+};
+
+}
