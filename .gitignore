@@ -2,9 +2,10 @@
 *.o
 *.a
 
-#测试程序
+#测试程序与相关文件
 test/generate_input
 test/test_output
+test/input
 
 #数据库文件
 *.idx
