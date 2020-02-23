@@ -86,7 +86,7 @@ private:
 	bool _db_lock_and_write_data(const char*, off_t, int);
 	bool _db_write_idx(const char*, off_t, int, off_t);
 	bool _db_lock_and_write_idx(const char*, off_t, int, off_t);
-	bool _db_pre_write_idx(const char*, off_t, struct iovec*);
+	bool _db_pre_write_idx(const char*, off_t, struct iovec*, char*);
 	bool _db_do_write_idx(off_t, int, struct iovec*);
 	bool _db_write_ptr(off_t, off_t);
 	int _db_store_insert(const string&, const string&, bool, off_t);

@@ -1,5 +1,5 @@
-#include "v_db.h"
-#include "record_lock.h"
+#include "include/v_db.h"
+#include "include/record_lock.h"
 
 #include <cstring>
 #include <fcntl.h>
@@ -28,8 +28,8 @@ DB::DB() {
 }
 DB::~DB() {
 	/*
-	 * 	离开作用域会释放资源
-	 *  最好还是自己调用close吧
+	 * 离开作用域会释放资源
+	 * 最好还是自己调用close吧
 	 */
 	_db_free();
 }
@@ -168,6 +168,7 @@ DBHASH DB::_db_hash(const string &key) {
  * 查找成功后相关的结果存储在index_和data_中
  */
 bool DB::_db_find(const string& key, off_t offset) {
+	pre_offset_ = offset;
 	offset = _db_read_ptr(offset);
 	while (offset) {
 		off_t next_offset = _db_read_idx(offset);
@@ -235,7 +236,7 @@ off_t DB::_db_read_idx(off_t offset) {
 	index_.length = atoi(ptr_length);
 	//长度条件判定
 	if ((index_.length < kIndex_min || index_.length > kIndex_max)) {
-		printf("_db_read_idx: index length not in range\n");
+		printf("_db_read_idx: index length =%d, index length not in range\n", index_.length);
 		return 0;
 	}
 	//读取index记录
@@ -268,7 +269,7 @@ off_t DB::_db_read_idx(off_t offset) {
 		printf("_db_read_idx: starting offset < 0\n");
 		return 0;
 	}
-	if (data_.length = atol(ptr2) <= 0) {
+	if ((data_.length = atol(ptr2)) <= 0) {
 		printf("_db_read_idx: invalid length\n");
 		return 0;
 	}
@@ -277,21 +278,21 @@ off_t DB::_db_read_idx(off_t offset) {
 
 /*
  * 将data读到data_.buffer里并返回
- * 失败返回NULL
+ * 失败返回""字符串
  */
 char *DB::_db_read_data() {
 	if (-1 == lseek(data_.fd, data_.offset, SEEK_SET)) {
 		printf("_db_read_dat: lseek error\n");
-		return NULL;
+		return "";
 	}
 	if (read(data_.fd, data_.buffer, data_.length) != data_.length) {
 		printf("_db_read_dat: read error\n");
-		return NULL;
+		return "";
 	}
 	if (data_.buffer[data_.length - 1] != kNew_line) {
 		//完整性检查
 		printf("_db_read_dat: missing newline\n");
-		return NULL;
+		return "";
 	}
 	data_.buffer[data_.length - 1] = 0; //用null替换换行符
 	return data_.buffer;
@@ -316,7 +317,7 @@ bool DB::_db_do_delete() {
 	memset(data_.buffer, kSpace, data_.length);
 	data_.buffer[data_.length - 1] = 0;
 	//再清空indexbuffer
-	char *ptr;
+	char *ptr = index_.buffer;
 	while (*ptr)
 		*ptr++ = kSpace;
 	//锁住空闲链表
@@ -395,7 +396,8 @@ bool DB::_db_lock_and_write_data(const char* data, off_t offset, int whence) {
  */
 bool DB::_db_write_idx(const char* key, off_t offset, int whence, off_t next_offset) {
 	struct iovec iov[2];
-	if (!_db_pre_write_idx(key, next_offset, iov)) {
+	char prefix[kPtr_size + kIndex_length_size + 1];
+	if (!_db_pre_write_idx(key, next_offset, iov, prefix)) {
 		printf("_db_writeidx: pre write idx error\n");
 		return false;
 	}
@@ -411,7 +413,8 @@ bool DB::_db_write_idx(const char* key, off_t offset, int whence, off_t next_off
  */
 bool DB::_db_lock_and_write_idx(const char* key, off_t offset, int whence, off_t next_offset) {
 	struct iovec iov[2];
-	if (!_db_pre_write_idx(key, next_offset, iov)) {
+	char prefix[kPtr_size + kIndex_length_size + 1];
+	if (!_db_pre_write_idx(key, next_offset, iov, prefix)) {
 		printf("_db_writeidx: pre write idx error\n");
 		return false;
 	}
@@ -430,7 +433,7 @@ bool DB::_db_lock_and_write_idx(const char* key, off_t offset, int whence, off_t
  * 参数参考db_write_idx，最后两个参数是用于结果返回
  * 成功返回true，失败返回false，iov存散列写的结构
  */
-bool DB::_db_pre_write_idx(const char* key, off_t next_offset, struct iovec *iov) {
+bool DB::_db_pre_write_idx(const char* key, off_t next_offset, struct iovec *iov, char *prefix) {
 	next_offset_ = next_offset;     //记录一下最后一次write_idx记录的下一个节点
 	if (next_offset < 0 || next_offset > kPtr_max) {
 		printf("_db_writeidx: invalid next_offset: %d", next_offset);
@@ -444,7 +447,6 @@ bool DB::_db_pre_write_idx(const char* key, off_t next_offset, struct iovec *iov
 		return false;
 	}
 	//index记录的前缀，结构是next_offset+index_length
-	char prefix[kPtr_size + kIndex_length_size + 1];
 	sprintf(prefix, "%*lld%*d", kPtr_size, (long long)next_offset, kIndex_length_size, index_.length);
 	iov[0].iov_base = prefix;
 	iov[0].iov_len = kPtr_size + kIndex_length_size;
@@ -476,7 +478,7 @@ bool DB::_db_do_write_idx(off_t offset, int whence, struct iovec *iov) {
  */
 bool DB::_db_write_ptr(off_t offset, off_t ptr) {
 	char asciiptr[kPtr_size + 1];
-	if (ptr < 0 || ptr > kPtr_size) {
+	if (ptr < 0 || ptr > kPtr_max) {
 		printf("_db_writeptr: invalid ptr: %d\n", ptr);
 		return false;
 	}
@@ -500,7 +502,7 @@ int DB::db_store(const string &key, const string &data, int flag) {
 		return -1;
 	}
 	//检查数据长度
-	int data_length = data.length();
+	int data_length = data.length() + 1;    //记得留个换行符
 	if (data_length < kData_min || data_length > kData_max) {
 		printf("db_store: invalid data length\n");
 		return -1;
@@ -523,7 +525,7 @@ int DB::_db_store_insert(const string &key, const string &data, bool can_find, o
 		return 1;
 	}
 	int key_length = key.length();
-	int data_length = data.length();
+	int data_length = data.length() + 1;    //记得留换行符
 	off_t ptr = _db_read_ptr(start_offset);    //记录当前hash链的第一个节点的偏移量
 	//先找是否有合适的空闲节点
 	if (!_db_find_and_delete_free(key_length, data_length)) {
@@ -572,7 +574,7 @@ int DB::_db_store_replace(const string &key, const string &data, bool can_find, 
 		return -1;
 	}
 	//检查data的长度是否符合
-	int data_length = data.length();
+	int data_length = data.length() + 1;      //记得留换行符
 	if (data_length != data_.length) {
 		/*
 		 * 长度不一致
@@ -619,6 +621,7 @@ bool DB::_db_find_and_delete_free(int key_length, int data_length) {
 	off_t offset, next_offset;
 	//先上个写锁
 	RecordWritewLock writew_lock(index_.fd, kFree_offset, SEEK_SET, 1);
+	pre_offset_ = kFree_offset;
 	offset = _db_read_ptr(kFree_offset);
 	while (offset) {
 		next_offset = _db_read_idx(offset);

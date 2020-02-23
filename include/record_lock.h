@@ -40,16 +40,13 @@ protected:
 	 * 解锁函数，锁不同但是解锁是一样的故该函数不需要重写
 	 */
 	int un_lock();
-	int lock_reg(int, int, int, off_t, int, off_t);
-
-private:
 	/*
 	 * 上锁失败的处理函数
 	 */
 	void fail_lock_process();
-	/*
-	 * 解锁失败的处理函数
-	 */
+	int lock_reg(int, int, int, off_t, int, off_t);
+
+private:
 	void fail_unlock_process();
 };
 

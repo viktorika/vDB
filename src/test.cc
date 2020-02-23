@@ -3,6 +3,8 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
+#include <fcntl.h>
+#include <iostream>
 
 void generate_input() {
 	//生成测试数据
@@ -13,7 +15,7 @@ void generate_input() {
 	srand((unsigned)time(NULL));
 	for (int i = 0; i < kCmd_number; ++i) {
 		int cmd = rand() % 3;
-		printf("%d", cmd);
+		printf("%d ", cmd);
 		/*
 		 * 0 store
 		 * 1 delete
@@ -33,26 +35,33 @@ void generate_input() {
 }
 
 template<typename T>
-void check_result(T result1, T result2) {
-	if (result1 != result2)
-		printf("result is not same\n");
+bool check_result(T result1, T result2, int cmd_number, int cmd) {
+	if (result1 != result2){
+		printf("result is not same, cmd_number=%d, cmd=%d\n", cmd_number, cmd);
+		std::cout<<"result1="<<result1<<" result2="<<result2<<std::endl;
+		return false;
+	}
+	return true;
 }
 
 void test_output() {
 	vDB::DB db;
 	std::unordered_map<std::string, std::string> m;
-	//db.db_open()
+	db.db_open("testdb", O_RDWR|O_CREAT|O_TRUNC);
 	/*
 	 * 通过input文件的输入数据同时来操作db和unorder_map
 	 * 对比他们的输出是否不一致
 	 */
 	freopen("input", "r", stdin);
 	int cmd;
+	int cmd_number = 1;       //表示这是第几行的命令
 	while (~scanf("%d", &cmd)) {
+		printf("cmd =%d, cmd_number=%d\n",cmd, cmd_number);
 		if (!cmd) {
 			char key[4], value[5];
 			int flag;
-			scanf("%s%s%d", &key, value, flag);
+			scanf("%s%s%d", key, value, &flag);
+			printf("key=%s,value=%s,flag=%d\n",key,value,flag);
 			int db_result, map_result;
 			/*
 			 * store操作
@@ -60,16 +69,30 @@ void test_output() {
 			 */
 			db_result = db.db_store(key, value, flag);
 			if (m.find(key) == m.end()) {
-				m[key] = value;
-				map_result = 0;
+				if (flag != 2){
+					//不是replace操作
+					m[key] = value;
+					map_result = 0;
+				}
+				else
+					map_result = -1;
 			}
-			else
-				map_result = 1;
-			check_result<int>(db_result, map_result);
+			else{
+				if (flag != 1){
+					//不是insert操作
+					m[key] = value;
+					map_result = 0;
+				}
+				else if(1 == flag)
+					map_result = 1;
+			}
+			if (!check_result<int>(db_result, map_result, cmd_number, cmd))
+				return;
 		}
 		else {
-			char key[4];
-			scanf("%s", &key);
+			char key[10];
+			scanf("%s", key);
+			printf("key=%s\n",key);
 			if (1 == cmd) {
 				/*
 				 * delete操作
@@ -84,7 +107,8 @@ void test_output() {
 					m.erase(element);
 					map_result = 1;
 				}
-				check_result<bool>(db_result, map_result);
+				if (!check_result<bool>(db_result, map_result, cmd_number, cmd))
+					return;
 			}
 			else {
 				/*
@@ -93,15 +117,18 @@ void test_output() {
 				 */
 				std::string db_result, map_result;
 				db_result = db.db_fetch(key);
-				if (m.find(key) == m.end())
+				if (m.find(key) != m.end())
 					map_result = m[key];
-				check_result<std::string>(db_result, map_result);
+				if (!check_result<std::string>(db_result, map_result, cmd_number, cmd))
+					return;
 			}
 		}
+		cmd_number++;
 	}
-	//db_close
+	db.db_close();
 }
 
 int main() {
-	
+	//generate_input();
+	test_output();
 }

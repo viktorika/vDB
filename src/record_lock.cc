@@ -1,4 +1,4 @@
-#include "record_lock.h"
+#include "include/record_lock.h"
 
 #include <cstdio>
 #include <stdlib.h>
@@ -10,10 +10,7 @@ RecordLock::RecordLock(int fd, off_t offset, int whence, off_t len)
 		len_(len),
 		lock_result_(0),
 		unlock_result_(0)
-{
-	if ((lock_result_ = lock()) < 0)
-		fail_lock_process();
-}
+{}
 
 RecordLock::~RecordLock() {
 	if ((unlock_result_ = un_lock()) < 0)
@@ -62,6 +59,8 @@ RecordReadLock::RecordReadLock(int fd, off_t offset, int whence, off_t len)
 	:	RecordLock(fd, offset, whence, len)
 {
 	lockname_ = "RecordReadLock";
+	if ((lock_result_ = lock()) < 0)
+		fail_lock_process();
 }
 
 int RecordReadLock::lock() {
@@ -72,6 +71,8 @@ RecordReadwLock::RecordReadwLock(int fd, off_t offset, int whence, off_t len)
 	:	RecordLock(fd, offset, whence, len)
 {
 	lockname_ = "RecordReadwLock";
+	if ((lock_result_ = lock()) < 0)
+		fail_lock_process();
 }
 
 int RecordReadwLock::lock() {
@@ -82,6 +83,8 @@ RecordWriteLock::RecordWriteLock(int fd, off_t offset, int whence, off_t len)
 	: RecordLock(fd, offset, whence, len)
 {
 	lockname_ = "RecordWriteLock";
+	if ((lock_result_ = lock()) < 0)
+		fail_lock_process();
 }
 
 int RecordWriteLock::lock() {
@@ -92,6 +95,8 @@ RecordWritewLock::RecordWritewLock(int fd, off_t offset, int whence, off_t len)
 	: RecordLock(fd, offset, whence, len)
 {
 	lockname_ = "RecordWritewLock";
+	if ((lock_result_ = lock()) < 0)
+		fail_lock_process();
 }
 
 int RecordWritewLock::lock() {
