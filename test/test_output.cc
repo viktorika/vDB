@@ -1,38 +1,10 @@
-#include "v_db.h"
+#include "../include/v_db.h"
 #include <cstdio>
 #include <string>
 #include <functional>
 #include <unordered_map>
 #include <fcntl.h>
 #include <iostream>
-
-void generate_input() {
-	//生成测试数据
-	freopen("input", "w", stdout);
-	const int kCmd_number = 10000;   //生成的命令数
-	const int kKey_max = 1000;       //key的最大值
-	const int kValue_max = 10000;    //value的最大值
-	srand((unsigned)time(NULL));
-	for (int i = 0; i < kCmd_number; ++i) {
-		int cmd = rand() % 3;
-		printf("%d ", cmd);
-		/*
-		 * 0 store
-		 * 1 delete
-		 * 2 fetch
-		 */
-		if (!cmd) {
-			int key = rand() % kKey_max;
-			int value = rand() % kValue_max;
-			int flag = rand() % 3 + 1;//范围在1-3之间
-			printf("%d %d %d\n", key, value, flag);
-		}
-		else {
-			int key = rand() % kKey_max;
-			printf("%d\n", key);
-		}
-	}
-}
 
 template<typename T>
 bool check_result(T result1, T result2, int cmd_number, int cmd) {
@@ -129,6 +101,5 @@ void test_output() {
 }
 
 int main() {
-	//generate_input();
 	test_output();
 }

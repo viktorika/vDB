@@ -1,4 +1,4 @@
-#include "include/record_lock.h"
+#include "../include/record_lock.h"
 
 #include <cstdio>
 #include <stdlib.h>
