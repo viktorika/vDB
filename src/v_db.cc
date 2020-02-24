@@ -251,16 +251,22 @@ off_t DB::_db_read_idx(off_t offset) {
 	}
 	index_.buffer[index_.length - 1] = 0;  //换行符替换为null
 	char *ptr1, *ptr2;
-	if (!(ptr1 = strchr(index_.buffer, kSeparate))) {
-		printf("_db_read_idx: missing first separator\n");
-		return 0;
-	}
-	*ptr1++ = 0;   //替换分隔符为null
-	if (!(ptr2 = strchr(ptr1, kSeparate))) {
+	ptr2 = index_.buffer + index_.length - 2;
+	while (ptr2 >= index_.buffer && kSeparate != *ptr2)
+		ptr2--;
+	if (ptr2 < index_.buffer){
 		printf("_db_read_idx: missing second separator\n");
 		return 0;
 	}
-	*ptr2++ = 0;
+	*ptr2++ = 0;    //替换分割符为null
+	ptr1 = ptr2 - 2;
+	while (ptr1 >= index_.buffer && kSeparate != *ptr1)
+		ptr1--;
+	if (ptr1 < index_.buffer){
+		printf("_db_read_idx: missing first separator\n");
+		return 0;
+	}
+	*ptr1++ = 0;
 	/*
 	 * 分隔符分开的三个数据分别是key，data的偏移量，data的长度
 	 *这里把data的偏移量和长度读到data_里

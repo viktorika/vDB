@@ -28,7 +28,6 @@ typedef unsigned int DBHASH;       //hash值类型
  * .idx存储key和其他相关的信息，.dat存储真正的数据
  * key和value均为string类型
  * 注意，里面有许多lseek操作，所以对同一个对象来说这些接口都是不可重入的
- * key不允许带:符号
  */
 class DB {
 public:
