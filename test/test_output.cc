@@ -19,7 +19,10 @@ bool check_result(T result1, T result2, int cmd_number, int cmd) {
 void test_output() {
 	vDB::DB db;
 	std::unordered_map<std::string, std::string> m;
-	db.db_open("testdb", O_RDWR|O_CREAT|O_TRUNC);
+	if (!db.db_open("testdb", O_RDWR|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR)){
+		printf("db open failed\n");
+		return;
+	}
 	/*
 	 * 通过input文件的输入数据同时来操作db和unorder_map
 	 * 对比他们的输出是否不一致

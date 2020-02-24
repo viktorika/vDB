@@ -35,6 +35,11 @@ DB::~DB() {
 }
 
 bool DB::db_open(const string &pathname, int oflag, ...) {
+	//检查fpathname，不允许为空
+	if (!pathname.length()){
+		printf("db_open: pathname can not be blank\n");
+		return false;
+	}
 	//分配资源
 	if (!_db_allocate())
 		return false;
