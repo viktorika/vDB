@@ -1,6 +1,7 @@
 # 编译的文件
 *.o
 *.a
+.vscode/settings.json
 
 #测试程序与相关文件
 test/generate_input
