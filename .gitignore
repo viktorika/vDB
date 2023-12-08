@@ -2,6 +2,11 @@
 *.o
 *.a
 .vscode/settings.json
+.clang-format
+.clangd
+build/
+vDB.code-workspace
+
 
 #测试程序与相关文件
 test/generate_input
