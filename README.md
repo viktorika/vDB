@@ -40,3 +40,12 @@ Environment
 
 ## Implementation_Principle
 具体实现原理请看https://blog.csdn.net/qq_34262582/article/details/104460853
+
+## 预定的视线
+
+1.先实现art树版的memtable。
+2.实现文件接口以及宏或者option控制WAL。
+3.实现level0.
+4.实现多level。
+5.ttl。
+7.key_value分离选项
