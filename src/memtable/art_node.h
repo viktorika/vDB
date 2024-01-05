@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <string_view>
 #include <utility>
@@ -7,10 +8,11 @@
 
 namespace vDB {
 
-// 注意，key最多只能2^24次方的长度，否则会出错
+// 注意，key最多只能2^20次方的长度，否则会出错
 
 // memory layout
-// ---- type 3bit ---- has_value 1bit ---- child_cnt 4bit ---- key_length 24bit ---- node_unique_attribute ---- value(if has) ---- key ----
+// ---- type 3bit ---- has_value 1bit ---- child_cnt 4bit ---- key_length 24bit ---- node_unique_attribute ----
+// value(if has) ---- key ----
 
 class ArtNode {
  public:
@@ -26,22 +28,19 @@ class ArtNode {
  protected:
   uint32_t type_ : 3;
   uint32_t has_value_ : 1;
-  uint32_t child_cnt_ : 4;
-  uint32_t key_length_ : 24;
+  uint32_t child_cnt_ : 8;
+  uint32_t key_length_ : 20;
 };
 
 class ArtNode4 : public ArtNode {
  public:
   NONCOPY(ArtNode4);
-  GET_VALUE_FUNC
+  GET_FUNC
   ART_FRIEND_CLASS
 
  private:
   ArtNode4() = default;
-  ArtNode4(bool has_value, std::string_view key, uint8_t child_cnt)
-      : ArtNode(Node4, has_value, child_cnt, key.length()) {
-    memcpy(data_, key.data(), key.length());
-  }
+  ArtNode4(bool has_value, uint8_t child_cnt, uint32_t key_length) : ArtNode(Node4, has_value, child_cnt, key_length) {}
 
   char edge[kFour];
   ArtNode *childs[kFour];
@@ -51,15 +50,13 @@ class ArtNode4 : public ArtNode {
 class ArtNode16 : public ArtNode {
  public:
   NONCOPY(ArtNode16);
-  GET_VALUE_FUNC
+  GET_FUNC
   ART_FRIEND_CLASS
 
  private:
   ArtNode16() = default;
-  ArtNode16(bool has_value, std::string_view key, uint8_t child_cnt)
-      : ArtNode(Node16, has_value, child_cnt, key.length()) {
-    memcpy(data_, key.data(), key.length());
-  }
+  ArtNode16(bool has_value, uint8_t child_cnt, uint32_t key_length)
+      : ArtNode(Node16, has_value, child_cnt, key_length) {}
 
   char edge[kSixteen];
   ArtNode *childs[kSixteen];
@@ -69,15 +66,14 @@ class ArtNode16 : public ArtNode {
 class ArtNode48 : public ArtNode {
  public:
   NONCOPY(ArtNode48);
-  GET_VALUE_FUNC
+  GET_FUNC
   ART_FRIEND_CLASS
 
  private:
   ArtNode48() = default;
-  ArtNode48(bool has_value, std::string_view key, uint8_t child_cnt)
-      : ArtNode(Node48, has_value, child_cnt, key.length()) {
-    memcpy(data_, key.data(), key.length());
-    // TODO index设置为-1
+  ArtNode48(bool has_value, uint8_t child_cnt, uint32_t key_length)
+      : ArtNode(Node48, has_value, child_cnt, key_length) {
+    memset(childs_index, -1, sizeof(childs_index));
   }
 
   char childs_index[kTwoFiveSix];
@@ -88,14 +84,14 @@ class ArtNode48 : public ArtNode {
 class ArtNode256 : public ArtNode {
  public:
   NONCOPY(ArtNode256);
-  GET_VALUE_FUNC
+  GET_FUNC
   ART_FRIEND_CLASS
 
  private:
   ArtNode256() = default;
-  ArtNode256(bool has_value, std::string_view key, uint8_t child_cnt)
-      : ArtNode(Node256, has_value, child_cnt, key.length()) {
-    memcpy(data_, key.data(), key.length());
+  ArtNode256(bool has_value, uint8_t child_cnt, uint32_t key_length)
+      : ArtNode(Node256, has_value, child_cnt, key_length) {
+    memset(childs, 0, sizeof(childs));
   }
 
   ArtNode *childs[kTwoFiveSix];
@@ -105,15 +101,13 @@ class ArtNode256 : public ArtNode {
 class ArtLeafNode : public ArtNode {
  public:
   NONCOPY(ArtLeafNode);
-  GET_VALUE_FUNC
+  GET_FUNC
   ART_FRIEND_CLASS
 
  private:
   ArtLeafNode() = default;
-  ArtLeafNode(bool has_value, std::string_view key, uint8_t child_cnt)
-      : ArtNode(LeafNode, has_value, child_cnt, key.length()) {
-    memcpy(data_, key.data(), key.length());
-  }
+  ArtLeafNode(bool has_value, uint8_t child_cnt, uint32_t key_length)
+      : ArtNode(LeafNode, has_value, child_cnt, key_length) {}
   char data_[0];
 };
 
@@ -136,30 +130,30 @@ class ArtNodeHelper {
     switch (node->type_) {
       case Node4: {
         if (node->HasValue()) {
-          return reinterpret_cast<char *>(node) + sizeof(Node4) + sizeof(value_size);
+          return reinterpret_cast<char *>(node) + sizeof(ArtNode4) + value_size;
         }
-        return reinterpret_cast<char *>(node) + sizeof(Node4);
+        return reinterpret_cast<char *>(node) + sizeof(ArtNode4);
       } break;
       case Node16: {
         if (node->HasValue()) {
-          return reinterpret_cast<char *>(node) + sizeof(Node16) + sizeof(value_size);
+          return reinterpret_cast<char *>(node) + sizeof(ArtNode16) + value_size;
         }
-        return reinterpret_cast<char *>(node) + sizeof(Node16);
+        return reinterpret_cast<char *>(node) + sizeof(ArtNode16);
       } break;
       case Node48: {
         if (node->HasValue()) {
-          return reinterpret_cast<char *>(node) + sizeof(Node48) + sizeof(value_size);
+          return reinterpret_cast<char *>(node) + sizeof(ArtNode48) + value_size;
         }
-        return reinterpret_cast<char *>(node) + sizeof(Node48);
+        return reinterpret_cast<char *>(node) + sizeof(ArtNode48);
       } break;
       case Node256: {
         if (node->HasValue()) {
-          return reinterpret_cast<char *>(node) + sizeof(Node256) + sizeof(value_size);
+          return reinterpret_cast<char *>(node) + sizeof(ArtNode256) + value_size;
         }
-        return reinterpret_cast<char *>(node) + sizeof(Node256);
+        return reinterpret_cast<char *>(node) + sizeof(ArtNode256);
       } break;
       case LeafNode: {
-        return reinterpret_cast<char *>(node) + sizeof(LeafNode) + sizeof(value_size);
+        return reinterpret_cast<char *>(node) + sizeof(ArtLeafNode) + value_size;
       } break;
     }
     assert(false);
@@ -181,19 +175,23 @@ class ArtNodeHelper {
   static void RemoveKeyPrefix(ArtNode *node, char *node_key_ptr, size_t remove_size) {
     node->key_length_ -= remove_size;
     memmove(node_key_ptr, node_key_ptr + remove_size, node->key_length_);
-    realloc(node, node_key_ptr - reinterpret_cast<char *>(node) + node->key_length_);
+    node =
+        reinterpret_cast<ArtNode *>(realloc(node, node_key_ptr - reinterpret_cast<char *>(node) + node->key_length_));
+    assert(node != nullptr);
   }
 
   template <class ValueType, class... Args>
   static ArtNode *CopyNewNodeWithValue(ArtNode *node, char *node_key_ptr, Args &&...args) {
     size_t node_header_size = node_key_ptr - reinterpret_cast<char *>(node);
     size_t new_node_size = node_key_ptr + node->key_length_ - reinterpret_cast<char *>(node) + sizeof(ValueType);
-    ArtNode *new_node = reinterpret_cast<ArtNode *>(malloc(new_node_size));
+    char *new_node = reinterpret_cast<char *>(malloc(new_node_size));
     memcpy(new_node, node, node_key_ptr - reinterpret_cast<char *>(node));
     memcpy(new_node + (node_key_ptr - reinterpret_cast<char *>(node)) + sizeof(ValueType), node_key_ptr,
            node->key_length_);
     new (new_node + (node_key_ptr - reinterpret_cast<char *>(node))) ValueType(std::forward<Args>(args)...);
-    return new_node;
+    auto *return_new_node = reinterpret_cast<ArtNode *>(new_node);
+    return_new_node->has_value_ = 1;
+    return return_new_node;
   }
 
   template <class ValueType>
@@ -206,7 +204,7 @@ class ArtNodeHelper {
   }
 
   // TODO函数待优化
-  static bool FindChild(ArtNode *node, char find_char, ArtNode **next_node) {
+  static bool FindChild(ArtNode *node, char find_char, ArtNode **&next_node) {
     switch (node->type_) {
       case Node4: {
         auto *node4 = static_cast<ArtNode4 *>(node);
@@ -235,6 +233,9 @@ class ArtNodeHelper {
       } break;
       case Node256: {
         auto *node256 = static_cast<ArtNode256 *>(node);
+        if (node256->childs[find_char] == nullptr) {
+          return false;
+        }
         next_node = &node256->childs[find_char];
         return true;
       } break;
