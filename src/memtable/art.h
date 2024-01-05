@@ -1,7 +1,9 @@
 #pragma once
 
 #include <utility>
+
 #include "art_node.h"
+
 
 namespace vDB {
 
@@ -71,14 +73,14 @@ bool Art<ValueType>::InsertImpl(ArtNode *&node, std::string_view key, ValueType 
     std::string_view new_father_key = key.substr(0, same_prefix_length);
     ArtNode4 *new_father = ArtNodeFactory::CreateNode4(new_father_key, 2);
 
-    new_father->edge[0] = node_key_ptr[same_prefix_length];
+    new_father->edge_[0] = node_key_ptr[same_prefix_length];
     ArtNodeHelper::RemoveKeyPrefix(node, node_key_ptr, same_prefix_length + 1);
-    new_father->childs[0] = node;
+    new_father->childs_[0] = node;
 
-    new_father->edge[1] = key[same_prefix_length];
+    new_father->edge_[1] = key[same_prefix_length];
     key.remove_prefix(same_prefix_length + 1);
     ArtLeafNode *new_leaf = ArtNodeFactory::CreateLeafNode<ValueType>(key, 0, std::forward<Args>(args)...);
-    new_father->childs[1] = reinterpret_cast<ArtNode *>(new_leaf);
+    new_father->childs_[1] = reinterpret_cast<ArtNode *>(new_leaf);
 
     node = reinterpret_cast<ArtNode *>(new_father);
     return true;
@@ -87,9 +89,9 @@ bool Art<ValueType>::InsertImpl(ArtNode *&node, std::string_view key, ValueType 
     // 同前缀部分作为父节点并且插入值，旧节点去掉相同部分后作为child1
     std::string_view new_father_key = key.substr(0, same_prefix_length);
     ArtNode4 *new_father = ArtNodeFactory::CreateNode4(new_father_key, 1, std::forward<Args>(args)...);
-    new_father->edge[0] = node_key_ptr[same_prefix_length];
+    new_father->edge_[0] = node_key_ptr[same_prefix_length];
     ArtNodeHelper::RemoveKeyPrefix(node, node_key_ptr, same_prefix_length + 1);
-    new_father->childs[0] = node;
+    new_father->childs_[0] = node;
     node = reinterpret_cast<ArtNode *>(new_father);
     return true;
   }
@@ -112,7 +114,7 @@ bool Art<ValueType>::InsertImpl(ArtNode *&node, std::string_view key, ValueType 
   }
   char next_char = key[same_prefix_length];
   key.remove_prefix(same_prefix_length + 1);
-  ArtNode *leaf_node =
+  auto *leaf_node =
       reinterpret_cast<ArtNode *>(ArtNodeFactory::CreateLeafNode<ValueType>(key, 0, std::forward<Args>(args)...));
   node = ArtNodeHelper::AddChild<ValueType>(node, next_char, leaf_node);
   return true;

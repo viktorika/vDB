@@ -42,8 +42,8 @@ class ArtNode4 : public ArtNode {
   ArtNode4() = default;
   ArtNode4(bool has_value, uint8_t child_cnt, uint32_t key_length) : ArtNode(Node4, has_value, child_cnt, key_length) {}
 
-  char edge[kFour];
-  ArtNode *childs[kFour];
+  char edge_[kFour];
+  ArtNode *childs_[kFour];
   char data_[0];
 };
 
@@ -58,8 +58,8 @@ class ArtNode16 : public ArtNode {
   ArtNode16(bool has_value, uint8_t child_cnt, uint32_t key_length)
       : ArtNode(Node16, has_value, child_cnt, key_length) {}
 
-  char edge[kSixteen];
-  ArtNode *childs[kSixteen];
+  char edge_[kSixteen];
+  ArtNode *childs_[kSixteen];
   char data_[0];
 };
 
@@ -73,11 +73,11 @@ class ArtNode48 : public ArtNode {
   ArtNode48() = default;
   ArtNode48(bool has_value, uint8_t child_cnt, uint32_t key_length)
       : ArtNode(Node48, has_value, child_cnt, key_length) {
-    memset(childs_index, -1, sizeof(childs_index));
+    memset(childs_index_, -1, sizeof(childs_index_));
   }
 
-  char childs_index[kTwoFiveSix];
-  ArtNode *childs[kFortyEight];
+  char childs_index_[kTwoFiveSix];
+  ArtNode *childs_[kFortyEight];
   char data_[0];
 };
 
@@ -91,10 +91,10 @@ class ArtNode256 : public ArtNode {
   ArtNode256() = default;
   ArtNode256(bool has_value, uint8_t child_cnt, uint32_t key_length)
       : ArtNode(Node256, has_value, child_cnt, key_length) {
-    memset(childs, 0, sizeof(childs));
+    memset(childs_, 0, sizeof(childs_));
   }
 
-  ArtNode *childs[kTwoFiveSix];
+  ArtNode *childs_[kTwoFiveSix];
   char data_[0];
 };
 
@@ -197,7 +197,7 @@ class ArtNodeHelper {
   template <class ValueType>
   static void DestroyNode(ArtNode *node, char *node_key_ptr) {
     if (node->HasValue()) {
-      ValueType *value = reinterpret_cast<ValueType *>(node_key_ptr - sizeof(ValueType));
+      auto *value = reinterpret_cast<ValueType *>(node_key_ptr - sizeof(ValueType));
       value->~ValueType();
     }
     free(node);
@@ -209,8 +209,8 @@ class ArtNodeHelper {
       case Node4: {
         auto *node4 = static_cast<ArtNode4 *>(node);
         for (int i = 0; i < node4->child_cnt_; i++) {
-          if (node4->edge[i] == find_char) {
-            next_node = &node4->childs[i];
+          if (node4->edge_[i] == find_char) {
+            next_node = &node4->childs_[i];
             return true;
           }
         }
@@ -218,25 +218,25 @@ class ArtNodeHelper {
       case Node16: {
         auto *node16 = static_cast<ArtNode16 *>(node);
         for (int i = 0; i < node16->child_cnt_; i++) {
-          if (node16->edge[i] == find_char) {
-            next_node = &node16->childs[i];
+          if (node16->edge_[i] == find_char) {
+            next_node = &node16->childs_[i];
             return true;
           }
         }
       } break;
       case Node48: {
         auto *node48 = static_cast<ArtNode48 *>(node);
-        if (auto index = node48->childs_index[find_char]; index != -1) {
-          next_node = &node48->childs[index];
+        if (auto index = node48->childs_index_[find_char]; index != -1) {
+          next_node = &node48->childs_[index];
           return true;
         }
       } break;
       case Node256: {
         auto *node256 = static_cast<ArtNode256 *>(node);
-        if (node256->childs[find_char] == nullptr) {
+        if (node256->childs_[find_char] == nullptr) {
           return false;
         }
-        next_node = &node256->childs[find_char];
+        next_node = &node256->childs_[find_char];
         return true;
       } break;
       case LeafNode: {
@@ -256,8 +256,8 @@ class ArtNodeHelper {
       case Node4: {
         auto *node4 = static_cast<ArtNode4 *>(node);
         if (node4->child_cnt_ < kFour) {
-          node4->edge[node4->child_cnt_] = next_char;
-          node4->childs[node4->child_cnt_] = next_node;
+          node4->edge_[node4->child_cnt_] = next_char;
+          node4->childs_[node4->child_cnt_] = next_node;
           node4->child_cnt_++;
           return node;
         }
@@ -266,7 +266,7 @@ class ArtNodeHelper {
         if (node4->HasValue()) {
           node_key_ptr = node4->data_ + sizeof(ValueType);
           std::string_view key(node_key_ptr, node4->key_length_);
-          ValueType *value_ptr = reinterpret_cast<ValueType *>(node4->data_);
+          auto *value_ptr = reinterpret_cast<ValueType *>(node4->data_);
           node16 = ArtNodeFactory::CreateNode16<ValueType>(key, 5, std::move(*value_ptr));
         } else {
           node_key_ptr = node4->data_;
@@ -274,19 +274,19 @@ class ArtNodeHelper {
           node16 = ArtNodeFactory::CreateNode16(key, 5);
         }
         for (int i = 0; i < kFour; i++) {
-          node16->edge[i] = node4->edge[i];
-          node16->childs[i] = node4->childs[i];
+          node16->edge_[i] = node4->edge_[i];
+          node16->childs_[i] = node4->childs_[i];
         }
-        node16->edge[kFour] = next_char;
-        node16->childs[kFour] = next_node;
+        node16->edge_[kFour] = next_char;
+        node16->childs_[kFour] = next_node;
         DestroyNode<ValueType>(node, node_key_ptr);
         return reinterpret_cast<ArtNode *>(node16);
       } break;
       case Node16: {
         auto *node16 = static_cast<ArtNode16 *>(node);
         if (node16->child_cnt_ < kSixteen) {
-          node16->edge[node16->child_cnt_] = next_char;
-          node16->childs[node16->child_cnt_] = next_node;
+          node16->edge_[node16->child_cnt_] = next_char;
+          node16->childs_[node16->child_cnt_] = next_node;
           node16->child_cnt_++;
           return node;
         }
@@ -295,7 +295,7 @@ class ArtNodeHelper {
         if (node16->HasValue()) {
           node_key_ptr = node16->data_ + sizeof(ValueType);
           std::string_view key(node_key_ptr, node16->key_length_);
-          ValueType *value_ptr = reinterpret_cast<ValueType *>(node16->data_);
+          auto *value_ptr = reinterpret_cast<ValueType *>(node16->data_);
           node48 = ArtNodeFactory::CreateNode48<ValueType>(key, 17, std::move(*value_ptr));
         } else {
           node_key_ptr = node16->data_;
@@ -303,19 +303,19 @@ class ArtNodeHelper {
           node48 = ArtNodeFactory::CreateNode48(key, 17);
         }
         for (int i = 0; i < kSixteen; i++) {
-          node48->childs_index[node16->edge[i]] = i;
-          node48->childs[i] = node16->childs[i];
+          node48->childs_index_[node16->edge_[i]] = i;
+          node48->childs_[i] = node16->childs_[i];
         }
-        node48->childs_index[next_char] = kSixteen;
-        node48->childs[kSixteen] = next_node;
+        node48->childs_index_[next_char] = kSixteen;
+        node48->childs_[kSixteen] = next_node;
         DestroyNode<ValueType>(node, node_key_ptr);
         return reinterpret_cast<ArtNode *>(node48);
       } break;
       case Node48: {
         auto *node48 = static_cast<ArtNode48 *>(node);
         if (node48->child_cnt_ < kFortyEight) {
-          node48->childs_index[next_char] = node48->child_cnt_;
-          node48->childs[node48->child_cnt_] = next_node;
+          node48->childs_index_[next_char] = node48->child_cnt_;
+          node48->childs_[node48->child_cnt_] = next_node;
           node48->child_cnt_++;
           return node;
         }
@@ -324,7 +324,7 @@ class ArtNodeHelper {
         if (node48->HasValue()) {
           node_key_ptr = node48->data_ + sizeof(ValueType);
           std::string_view key(node_key_ptr, node48->key_length_);
-          ValueType *value_ptr = reinterpret_cast<ValueType *>(node48->data_);
+          auto *value_ptr = reinterpret_cast<ValueType *>(node48->data_);
           node256 = ArtNodeFactory::CreateNode256<ValueType>(key, 49, std::move(*value_ptr));
         } else {
           node_key_ptr = node48->data_;
@@ -332,19 +332,19 @@ class ArtNodeHelper {
           node256 = ArtNodeFactory::CreateNode256(key, 49);
         }
         for (int i = 0; i < kTwoFiveSix; i++) {
-          if (node48->childs_index[i] == -1) {
+          if (node48->childs_index_[i] == -1) {
             continue;
           }
-          node256->childs[i] = node48->childs[node48->childs_index[i]];
+          node256->childs_[i] = node48->childs_[node48->childs_index_[i]];
         }
-        node256->childs[next_char] = next_node;
+        node256->childs_[next_char] = next_node;
         DestroyNode<ValueType>(node, node_key_ptr);
         return reinterpret_cast<ArtNode *>(node256);
       } break;
       case Node256: {
         auto *node256 = static_cast<ArtNode256 *>(node);
         if (node256->child_cnt_ < kTwoFiveSix) {
-          node256->childs[next_char] = next_node;
+          node256->childs_[next_char] = next_node;
           node256->child_cnt_++;
           return node;
         }
@@ -353,10 +353,10 @@ class ArtNodeHelper {
         auto *leaf_node = static_cast<ArtLeafNode *>(node);
         char *node_key_ptr = leaf_node->data_ + sizeof(ValueType);
         std::string_view key(node_key_ptr, leaf_node->key_length_);
-        ValueType *value_ptr = reinterpret_cast<ValueType *>(leaf_node->data_);
+        auto *value_ptr = reinterpret_cast<ValueType *>(leaf_node->data_);
         ArtNode4 *node4 = ArtNodeFactory::CreateNode4<ValueType>(key, 1, std::move(*value_ptr));
-        node4->edge[0] = next_char;
-        node4->childs[0] = next_node;
+        node4->edge_[0] = next_char;
+        node4->childs_[0] = next_node;
         DestroyNode<ValueType>(node, node_key_ptr);
         return reinterpret_cast<ArtNode *>(node4);
       } break;
@@ -369,7 +369,7 @@ class ArtNodeHelper {
   }
 
   template <class ValueType>
-  static ValueType GetValue(char *node_key_ptr) {
+  static ValueType GetValue(const char *node_key_ptr) {
     return *(reinterpret_cast<ValueType *>(node_key_ptr - sizeof(ValueType)));
   }
 };
