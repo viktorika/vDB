@@ -5,6 +5,7 @@
 #include <string_view>
 #include <utility>
 #include "comm.h"
+#include <cstring>
 
 namespace vDB {
 
@@ -127,6 +128,7 @@ class ArtNodeFactory {
 class ArtNodeHelper {
  public:
   static char *GetKeyPtr(ArtNode *node, size_t value_size) {
+    // printf("node->type=%d\n", node->type_);
     switch (node->type_) {
       case Node4: {
         if (node->HasValue()) {
@@ -226,17 +228,18 @@ class ArtNodeHelper {
       } break;
       case Node48: {
         auto *node48 = static_cast<ArtNode48 *>(node);
-        if (auto index = node48->childs_index_[find_char]; index != -1) {
+        if (auto index = node48->childs_index_[static_cast<uint8_t>(find_char)]; index != -1) {
           next_node = &node48->childs_[index];
           return true;
         }
       } break;
       case Node256: {
         auto *node256 = static_cast<ArtNode256 *>(node);
-        if (node256->childs_[find_char] == nullptr) {
+        auto index = static_cast<uint8_t>(find_char);
+        if (node256->childs_[index] == nullptr) {
           return false;
         }
-        next_node = &node256->childs_[find_char];
+        next_node = &node256->childs_[index];
         return true;
       } break;
       case LeafNode: {
@@ -303,18 +306,19 @@ class ArtNodeHelper {
           node48 = ArtNodeFactory::CreateNode48(key, 17);
         }
         for (int i = 0; i < kSixteen; i++) {
-          node48->childs_index_[node16->edge_[i]] = i;
+          node48->childs_index_[static_cast<uint8_t>(node16->edge_[i])] = i;
           node48->childs_[i] = node16->childs_[i];
         }
-        node48->childs_index_[next_char] = kSixteen;
+        node48->childs_index_[static_cast<uint8_t>(next_char)] = kSixteen;
         node48->childs_[kSixteen] = next_node;
         DestroyNode<ValueType>(node, node_key_ptr);
         return reinterpret_cast<ArtNode *>(node48);
       } break;
       case Node48: {
         auto *node48 = static_cast<ArtNode48 *>(node);
+        auto next_char_index = static_cast<uint8_t>(next_char);
         if (node48->child_cnt_ < kFortyEight) {
-          node48->childs_index_[next_char] = node48->child_cnt_;
+          node48->childs_index_[next_char_index] = node48->child_cnt_;
           node48->childs_[node48->child_cnt_] = next_node;
           node48->child_cnt_++;
           return node;
@@ -337,14 +341,15 @@ class ArtNodeHelper {
           }
           node256->childs_[i] = node48->childs_[node48->childs_index_[i]];
         }
-        node256->childs_[next_char] = next_node;
+        node256->childs_[next_char_index] = next_node;
         DestroyNode<ValueType>(node, node_key_ptr);
         return reinterpret_cast<ArtNode *>(node256);
       } break;
       case Node256: {
         auto *node256 = static_cast<ArtNode256 *>(node);
+        auto next_char_index = static_cast<uint8_t>(next_char);
         if (node256->child_cnt_ < kTwoFiveSix) {
-          node256->childs_[next_char] = next_node;
+          node256->childs_[next_char_index] = next_node;
           node256->child_cnt_++;
           return node;
         }
@@ -369,7 +374,7 @@ class ArtNodeHelper {
   }
 
   template <class ValueType>
-  static ValueType GetValue(const char *node_key_ptr) {
+  static ValueType GetValue(char *node_key_ptr) {
     return *(reinterpret_cast<ValueType *>(node_key_ptr - sizeof(ValueType)));
   }
 };
