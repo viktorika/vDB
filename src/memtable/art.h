@@ -108,7 +108,7 @@ bool Art<ValueType>::InsertImpl(ArtNode *&node, std::string_view key, ValueType 
     ArtNode4 *new_father = ArtNodeFactory::CreateNode4(new_father_key, 2);
 
     new_father->edge_[0] = node_key_ptr[same_prefix_length];
-    ArtNodeHelper::RemoveKeyPrefix(node, node_key_ptr, same_prefix_length + 1);
+    node = ArtNodeHelper::RemoveKeyPrefix<ValueType>(node, node_key_ptr, same_prefix_length + 1);
     new_father->childs_[0] = node;
 
     new_father->edge_[1] = key[same_prefix_length];
@@ -124,7 +124,7 @@ bool Art<ValueType>::InsertImpl(ArtNode *&node, std::string_view key, ValueType 
     std::string_view new_father_key = key.substr(0, same_prefix_length);
     ArtNode4 *new_father = ArtNodeFactory::CreateNode4<ValueType>(new_father_key, 1, std::forward<Args>(args)...);
     new_father->edge_[0] = node_key_ptr[same_prefix_length];
-    ArtNodeHelper::RemoveKeyPrefix(node, node_key_ptr, same_prefix_length + 1);
+    node = ArtNodeHelper::RemoveKeyPrefix<ValueType>(node, node_key_ptr, same_prefix_length + 1);
     new_father->childs_[0] = node;
     node = reinterpret_cast<ArtNode *>(new_father);
     return true;

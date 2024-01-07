@@ -22,6 +22,7 @@ TEST(NoormalInsertFindTest, LeafNodeFatherTest) {
 }
 
 TEST(RandomTest, RandomTest) {
+  std::cout << "size string" << sizeof(std::string) << std::endl;
   constexpr uint32_t kMaxKeyLength = 20;
   constexpr uint32_t kMaxKey = 100000000;
   std::vector<std::string> keys(kMaxKey);

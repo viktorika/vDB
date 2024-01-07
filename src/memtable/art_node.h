@@ -1,5 +1,7 @@
 #pragma once
 
+#include <wchar.h>
+
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -174,9 +176,25 @@ class ArtNodeHelper {
     return same_prefix_length;
   }
 
-  static void RemoveKeyPrefix(ArtNode *node, char *node_key_ptr, size_t remove_size) {
+  template <class ValueType>
+  static ArtNode *RemoveKeyPrefix(ArtNode *node, char *node_key_ptr, size_t remove_size) {
     node->key_length_ -= remove_size;
-    memmove(node_key_ptr, node_key_ptr + remove_size, node->key_length_);
+    char *new_node =
+        reinterpret_cast<char *>(malloc(node_key_ptr - reinterpret_cast<char *>(node) + node->key_length_));
+    auto node_and_value_size = node_key_ptr - reinterpret_cast<char *>(node);
+    if (node->HasValue()) {
+      memcpy(new_node, node, node_and_value_size - sizeof(ValueType));
+      new (new_node + node_and_value_size - sizeof(ValueType))
+          ValueType(std::move(*(reinterpret_cast<ValueType *>(node_key_ptr - sizeof(ValueType)))));
+    } else {
+      memcpy(new_node, node, node_and_value_size);
+    }
+    memcpy(new_node + node_and_value_size, node_key_ptr + remove_size, node->key_length_);
+    DestroyNode<ValueType>(node, node_key_ptr);
+    return reinterpret_cast<ArtNode *>(new_node);
+
+    // node->key_length_ -= remove_size;
+    // memmove(node_key_ptr, node_key_ptr + remove_size, node->key_length_);
     // realloc会修改地址，暂时先不回收内存
     // node =
     //     reinterpret_cast<ArtNode *>(realloc(node, node_key_ptr - reinterpret_cast<char *>(node) +
