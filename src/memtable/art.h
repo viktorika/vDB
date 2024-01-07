@@ -100,10 +100,8 @@ bool Art<ValueType>::Insert(std::string_view key, ValueType *old_value, Args &&.
 template <class ValueType>
 template <class... Args>
 bool Art<ValueType>::InsertImpl(ArtNode *&node, std::string_view key, ValueType *old_value, Args &&...args) {
-  // std::cout << "key=" << key << std::endl;
   auto *node_key_ptr = ArtNodeHelper::GetKeyPtr(node, sizeof(ValueType));
   auto same_prefix_length = ArtNodeHelper::CheckSamePrefixLength(node, node_key_ptr, key);
-  // std::cout << "node prefix=" << std::string_view(node_key_ptr, node->key_length_) << std::endl;
   if (same_prefix_length < key.length() && same_prefix_length < node->key_length_) {
     // 同前缀部分作为父节点，旧节点去掉相同部分后作为child1，key剩余部分新建叶子结点作为child2。
     std::string_view new_father_key = key.substr(0, same_prefix_length);
@@ -115,7 +113,6 @@ bool Art<ValueType>::InsertImpl(ArtNode *&node, std::string_view key, ValueType 
 
     new_father->edge_[1] = key[same_prefix_length];
     key.remove_prefix(same_prefix_length + 1);
-    // std::cout << "create leaf, key=" << key << " edge=" << new_father->edge_[1] << std::endl;
     ArtLeafNode *new_leaf = ArtNodeFactory::CreateLeafNode<ValueType>(key, 0, std::forward<Args>(args)...);
     new_father->childs_[1] = reinterpret_cast<ArtNode *>(new_leaf);
 
@@ -151,7 +148,6 @@ bool Art<ValueType>::InsertImpl(ArtNode *&node, std::string_view key, ValueType 
   }
   char next_char = key[same_prefix_length];
   key.remove_prefix(same_prefix_length + 1);
-  // std::cout << "create leaf, key=" << key << " edge=" << next_char << std::endl;
   auto *leaf_node =
       reinterpret_cast<ArtNode *>(ArtNodeFactory::CreateLeafNode<ValueType>(key, 0, std::forward<Args>(args)...));
   node = ArtNodeHelper::AddChild<ValueType>(node, next_char, leaf_node);
