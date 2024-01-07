@@ -2,10 +2,12 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstring>
 #include <string_view>
 #include <utility>
+
 #include "comm.h"
-#include <cstring>
+
 
 namespace vDB {
 
@@ -128,7 +130,6 @@ class ArtNodeFactory {
 class ArtNodeHelper {
  public:
   static char *GetKeyPtr(ArtNode *node, size_t value_size) {
-    // printf("node->type=%d\n", node->type_);
     switch (node->type_) {
       case Node4: {
         if (node->HasValue()) {
@@ -177,9 +178,10 @@ class ArtNodeHelper {
   static void RemoveKeyPrefix(ArtNode *node, char *node_key_ptr, size_t remove_size) {
     node->key_length_ -= remove_size;
     memmove(node_key_ptr, node_key_ptr + remove_size, node->key_length_);
-    node =
-        reinterpret_cast<ArtNode *>(realloc(node, node_key_ptr - reinterpret_cast<char *>(node) + node->key_length_));
-    assert(node != nullptr);
+    // TODO，待确认realloc的问题
+    // node =
+    //     reinterpret_cast<ArtNode *>(realloc(node, node_key_ptr - reinterpret_cast<char *>(node) + node->key_length_));
+    // assert(node != nullptr);
   }
 
   template <class ValueType, class... Args>
