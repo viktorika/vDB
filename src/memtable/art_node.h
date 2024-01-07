@@ -8,7 +8,6 @@
 
 #include "comm.h"
 
-
 namespace vDB {
 
 // 注意，key最多只能2^20次方的长度，否则会出错
@@ -178,9 +177,10 @@ class ArtNodeHelper {
   static void RemoveKeyPrefix(ArtNode *node, char *node_key_ptr, size_t remove_size) {
     node->key_length_ -= remove_size;
     memmove(node_key_ptr, node_key_ptr + remove_size, node->key_length_);
-    // TODO，待确认realloc的问题
+    // realloc会修改地址，暂时先不回收内存
     // node =
-    //     reinterpret_cast<ArtNode *>(realloc(node, node_key_ptr - reinterpret_cast<char *>(node) + node->key_length_));
+    //     reinterpret_cast<ArtNode *>(realloc(node, node_key_ptr - reinterpret_cast<char *>(node) +
+    //     node->key_length_));
     // assert(node != nullptr);
   }
 
