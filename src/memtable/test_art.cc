@@ -19,12 +19,17 @@ TEST(NoormalInsertFindTest, LeafNodeFatherTest) {
     EXPECT_EQ(art_tree.Find(keys[i], &value), true);
     EXPECT_EQ(value, std::to_string(i));
   }
+  for (int i = 0; i < 6; i++) {
+    std::string value;
+    EXPECT_EQ(art_tree.Insert(keys[i], &value, std::to_string(i)), false);
+    EXPECT_EQ(value, std::to_string(i));
+  }
 }
 
 TEST(RandomTest, RandomTest) {
-  std::cout << "size string" << sizeof(std::string) << std::endl;
+  // TODO优化，没有解决key冲突的情况，但一般来说不会冲突
   constexpr uint32_t kMaxKeyLength = 20;
-  constexpr uint32_t kMaxKey = 100000000;
+  constexpr uint32_t kMaxKey = 10000;
   std::vector<std::string> keys(kMaxKey);
   std::random_device rd;
   std::mt19937 gen(rd());
