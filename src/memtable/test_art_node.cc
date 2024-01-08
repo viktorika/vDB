@@ -451,6 +451,172 @@ TEST(AddAndFindChildTest, LeafNodeFatherTest) {
   vDB::ArtNodeHelper::DestroyNode<std::string>(child, child_key_ptr);
 }
 
+TEST(AddPrefixTest, Node4Test) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateNode4<std::string>(key, 0, "456");
+  node = reinterpret_cast<vDB::ArtNode4 *>(vDB::ArtNodeHelper::AddKeyPrefix<std::string>(node, "abc"));
+  EXPECT_EQ(node->GetKey<std::string>(), "abc1234567");
+  EXPECT_EQ(node->GetValue<std::string>(), "456");
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+
+  node = vDB::ArtNodeFactory::CreateNode4(key, 0);
+  node = reinterpret_cast<vDB::ArtNode4 *>(vDB::ArtNodeHelper::AddKeyPrefix<std::string>(node, "abc"));
+  EXPECT_EQ(node->GetKey<std::string>(), "abc1234567");
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(AddPrefixTest, Node16Test) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateNode16<std::string>(key, 0, "456");
+  node = reinterpret_cast<vDB::ArtNode16 *>(vDB::ArtNodeHelper::AddKeyPrefix<std::string>(node, "abc"));
+  EXPECT_EQ(node->GetKey<std::string>(), "abc1234567");
+  EXPECT_EQ(node->GetValue<std::string>(), "456");
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+
+  node = vDB::ArtNodeFactory::CreateNode16(key, 0);
+  node = reinterpret_cast<vDB::ArtNode16 *>(vDB::ArtNodeHelper::AddKeyPrefix<std::string>(node, "abc"));
+  EXPECT_EQ(node->GetKey<std::string>(), "abc1234567");
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(AddPrefixTest, Node48Test) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateNode48<std::string>(key, 0, "456");
+  node = reinterpret_cast<vDB::ArtNode48 *>(vDB::ArtNodeHelper::AddKeyPrefix<std::string>(node, "abc"));
+  EXPECT_EQ(node->GetKey<std::string>(), "abc1234567");
+  EXPECT_EQ(node->GetValue<std::string>(), "456");
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+
+  node = vDB::ArtNodeFactory::CreateNode48(key, 0);
+  node = reinterpret_cast<vDB::ArtNode48 *>(vDB::ArtNodeHelper::AddKeyPrefix<std::string>(node, "abc"));
+  EXPECT_EQ(node->GetKey<std::string>(), "abc1234567");
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(AddPrefixTest, Node256Test) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateNode256<std::string>(key, 0, "456");
+  node = reinterpret_cast<vDB::ArtNode256 *>(vDB::ArtNodeHelper::AddKeyPrefix<std::string>(node, "abc"));
+  EXPECT_EQ(node->GetKey<std::string>(), "abc1234567");
+  EXPECT_EQ(node->GetValue<std::string>(), "456");
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+
+  node = vDB::ArtNodeFactory::CreateNode256(key, 0);
+  node = reinterpret_cast<vDB::ArtNode256 *>(vDB::ArtNodeHelper::AddKeyPrefix<std::string>(node, "abc"));
+  EXPECT_EQ(node->GetKey<std::string>(), "abc1234567");
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(AddPrefixTest, LeafNodeTest) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateLeafNode<std::string>(key, 0, "456");
+  node = reinterpret_cast<vDB::ArtLeafNode *>(vDB::ArtNodeHelper::AddKeyPrefix<std::string>(node, "abc"));
+  EXPECT_EQ(node->GetKey<std::string>(), "abc1234567");
+  EXPECT_EQ(node->GetValue<std::string>(), "456");
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(DeleteValueTest, Node4Test) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateNode4<std::string>(key, 0, "456");
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = reinterpret_cast<vDB::ArtNode4 *>(vDB::ArtNodeHelper::DeleteValue<std::string>(node, node_key_ptr));
+  EXPECT_EQ(node->GetKey<std::string>(), "1234567");
+  EXPECT_EQ(node->HasValue(), false);
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(DeleteValueTest, Node16Test) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateNode16<std::string>(key, 0, "456");
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = reinterpret_cast<vDB::ArtNode16 *>(vDB::ArtNodeHelper::DeleteValue<std::string>(node, node_key_ptr));
+  EXPECT_EQ(node->GetKey<std::string>(), "1234567");
+  EXPECT_EQ(node->HasValue(), false);
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(DeleteValueTest, Node48Test) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateNode48<std::string>(key, 0, "456");
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = reinterpret_cast<vDB::ArtNode48 *>(vDB::ArtNodeHelper::DeleteValue<std::string>(node, node_key_ptr));
+  EXPECT_EQ(node->GetKey<std::string>(), "1234567");
+  EXPECT_EQ(node->HasValue(), false);
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(DeleteValueTest, Node256Test) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateNode256<std::string>(key, 0, "456");
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = reinterpret_cast<vDB::ArtNode256 *>(vDB::ArtNodeHelper::DeleteValue<std::string>(node, node_key_ptr));
+  EXPECT_EQ(node->GetKey<std::string>(), "1234567");
+  EXPECT_EQ(node->HasValue(), false);
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(PathCompressionTest, Node4Test) {
+  std::string key("1234567");
+  auto *node = vDB::ArtNodeFactory::CreateNode4<std::string>(key, 0, "456");
+  auto *child = vDB::ArtNodeFactory::CreateNode4<std::string>(key, 0, "789");
+  node = reinterpret_cast<vDB::ArtNode4 *>(vDB::ArtNodeHelper::AddChild<std::string>(node, 'a', child));
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = reinterpret_cast<vDB::ArtNode4 *>(vDB::ArtNodeHelper::PathCompression<std::string>(node, node_key_ptr));
+  EXPECT_EQ(node->GetKey<std::string>(), "1234567a1234567");
+  EXPECT_EQ(node->GetValue<std::string>(), "789");
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+
+  node = vDB::ArtNodeFactory::CreateNode4(key, 0);
+  child = vDB::ArtNodeFactory::CreateNode4(key, 0);
+  node = reinterpret_cast<vDB::ArtNode4 *>(vDB::ArtNodeHelper::AddChild<std::string>(node, 'a', child));
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = reinterpret_cast<vDB::ArtNode4 *>(vDB::ArtNodeHelper::PathCompression<std::string>(node, node_key_ptr));
+  EXPECT_EQ(node->GetKey<std::string>(), "1234567a1234567");
+  EXPECT_EQ(node->HasValue(), false);
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(RemoveChildTest, Node4FatherTest) {
+  std::string key("1234567");
+  vDB::ArtNode *node = reinterpret_cast<vDB::ArtNode *>(vDB::ArtNodeFactory::CreateNode4<std::string>(key, 0, "456"));
+  auto *child = vDB::ArtNodeFactory::CreateNode4<std::string>(key, 0, "789");
+  node = vDB::ArtNodeHelper::AddChild<std::string>(node, 'a', child);
+  node = vDB::ArtNodeHelper::AddChild<std::string>(node, 'b', child);
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 'a');
+  vDB::ArtNode **next_node;
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 'a', next_node), false);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 'b', next_node), true);
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 'b');
+  EXPECT_EQ(node->IsLeaf(), true);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 'a', next_node), false);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 'b', next_node), false);
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(RemoveChildTest, Node16FatherTest) {
+  std::string key("1234567");
+  vDB::ArtNode *node = reinterpret_cast<vDB::ArtNode *>(vDB::ArtNodeFactory::CreateNode16<std::string>(key, 0, "456"));
+  for (int i = 0; i < 20; i++) {
+  }
+}
+
 GTEST_API_ int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
