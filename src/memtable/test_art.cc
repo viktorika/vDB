@@ -53,7 +53,7 @@ TEST(NoormalDeleteTest, NormalTest) {
 TEST(RandomTest, RandomTest) {
   // TODO优化，没有解决key冲突的情况，但这个范围一般来说不会冲突
   constexpr uint32_t kMaxKeyLength = 20;
-  constexpr uint32_t kMaxKey = 1000000;
+  constexpr uint32_t kMaxKey = 10000000;
   std::vector<std::string> keys(kMaxKey * 2);
   std::random_device rd;
   std::mt19937 gen(rd());

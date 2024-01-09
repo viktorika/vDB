@@ -44,8 +44,7 @@ class Art {
 
 template <class ValueType>
 bool Art<ValueType>::Find(std::string_view key, ValueType *value) {
-  if (key.empty()) {
-    // TODO likely optimize
+  if (unlikely(key.empty())) {
     return false;
   }
   return FindImpl(root_, key, value);
@@ -76,7 +75,7 @@ bool Art<ValueType>::FindImpl(ArtNode *node, std::string_view key, ValueType *va
 template <class ValueType>
 template <class... Args>
 bool Art<ValueType>::Insert(std::string_view key, ValueType *old_value, Args &&...args) {
-  if (key.empty() || key.size() >= kMaxKeySize) {
+  if (unlikely(key.empty() || key.size() >= kMaxKeySize)) {
     return false;
   }
   if (root_ == nullptr) {
@@ -146,8 +145,7 @@ bool Art<ValueType>::InsertImpl(ArtNode *&node, std::string_view key, ValueType 
 template <class ValueType>
 template <class... Args>
 bool Art<ValueType>::Update(std::string_view key, Args &&...args) {
-  if (key.empty()) {
-    // TODO likely optimize
+  if (unlikely(key.empty())) {
     return false;
   }
   return UpdateImpl(root_, key, std::forward<Args>(args)...);
@@ -179,10 +177,10 @@ bool Art<ValueType>::UpdateImpl(ArtNode *node, std::string_view key, Args &&...a
 template <class ValueType>
 template <class... Args>
 bool Art<ValueType>::Upsert(std::string_view key, Args &&...args) {
-  if (key.empty() || key.size() >= kMaxKeySize) {
+  if (unlikely(key.empty() || key.size() >= kMaxKeySize)) {
     return false;
   }
-  if (root_ == nullptr) {
+  if (unlikely(root_ == nullptr)) {
     root_ = reinterpret_cast<ArtNode *>(ArtNodeFactory::CreateLeafNode<ValueType>(key, 0, std::forward<Args>(args)...));
     return true;
   }
@@ -248,8 +246,7 @@ bool Art<ValueType>::UpSertImpl(ArtNode *&node, std::string_view key, Args &&...
 
 template <class ValueType>
 bool Art<ValueType>::Delete(std::string_view key) {
-  if (key.empty()) {
-    // TODO likely optimize
+  if (unlikely(key.empty())) {
     return false;
   }
   return DeleteImpl(root_, key);

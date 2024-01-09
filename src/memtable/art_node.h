@@ -317,10 +317,8 @@ class ArtNodeHelper {
           std::string_view key(node_key_ptr, node4->key_length_);
           node16 = ArtNodeFactory::CreateNode16(key, 5);
         }
-        for (int i = 0; i < kFour; i++) {
-          node16->edge_[i] = node4->edge_[i];
-          node16->childs_[i] = node4->childs_[i];
-        }
+        memcpy(node16->edge_, node4->edge_, sizeof(node4->edge_));
+        memcpy(node16->childs_, node4->childs_, sizeof(node4->childs_));
         node16->edge_[kFour] = next_char;
         node16->childs_[kFour] = next_node;
         DestroyNode<ValueType>(node, node_key_ptr);
@@ -348,8 +346,8 @@ class ArtNodeHelper {
         }
         for (int i = 0; i < kSixteen; i++) {
           node48->childs_index_[static_cast<uint8_t>(node16->edge_[i])] = i;
-          node48->childs_[i] = node16->childs_[i];
         }
+        memcpy(node48->childs_, node16->childs_, sizeof(node16->childs_));
         node48->childs_index_[static_cast<uint8_t>(next_char)] = kSixteen;
         node48->childs_[kSixteen] = next_node;
         DestroyNode<ValueType>(node, node_key_ptr);
