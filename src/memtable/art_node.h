@@ -463,6 +463,7 @@ class ArtNodeHelper {
             memcpy(new_node->edge_ + i, node16->edge_ + i + 1, 5 - (i + 1));
             memcpy(new_node->childs_, node16->childs_, i);
             memcpy(new_node->childs_ + i, node16->childs_ + i + 1, 5 - (i + 1));
+            DestroyNode<ValueType>(node, node_key_ptr);
             return new_node;
           }
           assert(false);
@@ -497,6 +498,7 @@ class ArtNodeHelper {
             new_node->edge_[cnt] = static_cast<char>(i);
             new_node->childs_[cnt++] = node48->childs_[node48->childs_index_[i]];
           }
+          DestroyNode<ValueType>(node, node_key_ptr);
           return new_node;
         }
         node48->child_cnt_--;
@@ -523,6 +525,7 @@ class ArtNodeHelper {
             new_node->childs_index_[i] = cnt;
             new_node->childs_[cnt++] = node256->childs_[i];
           }
+          DestroyNode<ValueType>(node, node_key_ptr);
           return new_node;
         }
         node256->child_cnt_--;
@@ -558,7 +561,6 @@ class ArtNodeHelper {
     return reinterpret_cast<ArtNode *>(new_node);
   }
 
-  // TODO 待优化
   template <class ValueType>
   static ArtNode *PathCompression(ArtNode *node, char *node_key_ptr) {
     auto *node4 = reinterpret_cast<ArtNode4 *>(node);

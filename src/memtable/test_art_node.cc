@@ -1,3 +1,4 @@
+#include <array>
 #include <iostream>
 #include <string>
 
@@ -613,8 +614,97 @@ TEST(RemoveChildTest, Node4FatherTest) {
 TEST(RemoveChildTest, Node16FatherTest) {
   std::string key("1234567");
   vDB::ArtNode *node = reinterpret_cast<vDB::ArtNode *>(vDB::ArtNodeFactory::CreateNode16<std::string>(key, 0, "456"));
-  for (int i = 0; i < 20; i++) {
+  std::array<vDB::ArtNode4 *, 8> childs;
+  for (int i = 0; i < 8; i++) {
+    childs[i] = vDB::ArtNodeFactory::CreateNode4<std::string>(key, 0, "789");
+    node = vDB::ArtNodeHelper::AddChild<std::string>(node, i, childs[i]);
   }
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 7);
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 6);
+  vDB::ArtNode **next_node;
+  for (int i = 0; i < 6; i++) {
+    EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, i, next_node), true);
+  }
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 7, next_node), false);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 6, next_node), false);
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 5);
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 4);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 5, next_node), false);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 4, next_node), false);
+  for (int i = 0; i < 4; i++) {
+    EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, i, next_node), true);
+  }
+  for (int i = 0; i < 8; i++) {
+    auto *child_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(childs[i], sizeof(std::string));
+    vDB::ArtNodeHelper::DestroyNode<std::string>(childs[i], child_key_ptr);
+  }
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(RemoveChildTest, Node48FatherTest) {
+  std::string key("1234567");
+  vDB::ArtNode *node = reinterpret_cast<vDB::ArtNode *>(vDB::ArtNodeFactory::CreateNode48<std::string>(key, 0, "456"));
+  std::array<vDB::ArtNode4 *, 20> childs;
+  for (int i = 0; i < 20; i++) {
+    childs[i] = vDB::ArtNodeFactory::CreateNode4<std::string>(key, 0, "789");
+    node = vDB::ArtNodeHelper::AddChild<std::string>(node, i, childs[i]);
+  }
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 19);
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 18);
+  vDB::ArtNode **next_node;
+  for (int i = 0; i < 18; i++) {
+    EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, i, next_node), true);
+  }
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 18, next_node), false);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 19, next_node), false);
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 17);
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 16);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 17, next_node), false);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 16, next_node), false);
+  for (int i = 0; i < 16; i++) {
+    EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, i, next_node), true);
+  }
+  for (int i = 0; i < 20; i++) {
+    auto *child_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(childs[i], sizeof(std::string));
+    vDB::ArtNodeHelper::DestroyNode<std::string>(childs[i], child_key_ptr);
+  }
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
+}
+
+TEST(RemoveChildTest, Node256FatherTest) {
+  std::string key("1234567");
+  vDB::ArtNode *node = reinterpret_cast<vDB::ArtNode *>(vDB::ArtNodeFactory::CreateNode256<std::string>(key, 0, "456"));
+  std::array<vDB::ArtNode4 *, 50> childs;
+  for (int i = 0; i < 50; i++) {
+    childs[i] = vDB::ArtNodeFactory::CreateNode4<std::string>(key, 0, "789");
+    node = vDB::ArtNodeHelper::AddChild<std::string>(node, i, childs[i]);
+  }
+  auto *node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 49);
+  vDB::ArtNode **next_node;
+  for (int i = 0; i < 49; i++) {
+    EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, i, next_node), true);
+  }
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 49, next_node), false);
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 48);
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 47);
+  node = vDB::ArtNodeHelper::RemoveChild<std::string>(node, node_key_ptr, 46);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 48, next_node), false);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 47, next_node), false);
+  EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, 46, next_node), false);
+  for (int i = 0; i < 46; i++) {
+    EXPECT_EQ(vDB::ArtNodeHelper::FindChild(node, i, next_node), true);
+  }
+  for (int i = 0; i < 50; i++) {
+    auto *child_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(childs[i], sizeof(std::string));
+    vDB::ArtNodeHelper::DestroyNode<std::string>(childs[i], child_key_ptr);
+  }
+  node_key_ptr = vDB::ArtNodeHelper::GetKeyPtr(node, sizeof(std::string));
+  vDB::ArtNodeHelper::DestroyNode<std::string>(node, node_key_ptr);
 }
 
 GTEST_API_ int main(int argc, char **argv) {
