@@ -437,8 +437,9 @@ class ArtNodeHelper {
           if (node4->edge_[i] != next_char) {
             continue;
           }
-          memmove(node4->edge_ + i, node4->edge_ + i + 1, node4->child_cnt_ - (i + 1));
-          memmove(node4->childs_ + i, node4->childs_ + i + 1, node4->child_cnt_ - (i + 1));
+          auto move_len = node4->child_cnt_ - (i + 1);
+          memmove(node4->edge_ + i, node4->edge_ + i + 1, move_len);
+          memmove(node4->childs_ + i, node4->childs_ + i + 1, move_len * sizeof(ArtNode *));
           node4->child_cnt_--;
           return node;
         }
@@ -455,14 +456,15 @@ class ArtNodeHelper {
           } else {
             new_node = ArtNodeFactory::CreateNode4(std::string_view(node_key_ptr, node->key_length_), kFour);
           }
-          for (int i = 0; i < 5; i++) {
+          for (int i = 0; i < node16->child_cnt_; i++) {
             if (node16->edge_[i] != next_char) {
               continue;
             }
+            auto move_len = node16->child_cnt_ - (i + 1);
             memcpy(new_node->edge_, node16->edge_, i);
-            memcpy(new_node->edge_ + i, node16->edge_ + i + 1, 5 - (i + 1));
-            memcpy(new_node->childs_, node16->childs_, i);
-            memcpy(new_node->childs_ + i, node16->childs_ + i + 1, 5 - (i + 1));
+            memcpy(new_node->edge_ + i, node16->edge_ + i + 1, move_len);
+            memcpy(new_node->childs_, node16->childs_, i * sizeof(ArtNode *));
+            memcpy(new_node->childs_ + i, node16->childs_ + i + 1, move_len * sizeof(ArtNode *));
             DestroyNode<ValueType>(node, node_key_ptr);
             return new_node;
           }
@@ -472,8 +474,9 @@ class ArtNodeHelper {
           if (node16->edge_[i] != next_char) {
             continue;
           }
-          memmove(node16->edge_ + i, node16->edge_ + i + 1, node16->child_cnt_ - (i + 1));
-          memmove(node16->childs_ + i, node16->childs_ + i + 1, node16->child_cnt_ - (i + 1));
+          auto move_len = node16->child_cnt_ - (i + 1);
+          memmove(node16->edge_ + i, node16->edge_ + i + 1, move_len);
+          memmove(node16->childs_ + i, node16->childs_ + i + 1, move_len * sizeof(ArtNode *));
           node16->child_cnt_--;
           return node;
         }

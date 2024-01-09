@@ -7,7 +7,7 @@
 #include "art.h"
 #include "gtest/gtest.h"
 
-TEST(NoormalInsertFindTest, LeafNodeFatherTest) {
+TEST(NoormalInsertFindTest, NormalTest) {
   std::array<std::string, 6> keys = {
       "abcdefg", "ab", "abcght", "abqert", "abcghq", "abcgh",
   };
@@ -27,10 +27,33 @@ TEST(NoormalInsertFindTest, LeafNodeFatherTest) {
   }
 }
 
+TEST(NoormalDeleteTest, NormalTest) {
+  std::array<std::string, 6> keys = {
+      "abcdefg", "ab", "abcght", "abqert", "abcghq", "abcgh",
+  };
+  vDB::Art<std::string> art_tree;
+  for (int i = 0; i < 6; i++) {
+    EXPECT_EQ(art_tree.Insert(keys[i], nullptr, std::to_string(i)), true);
+  }
+  for (int i = 0; i < 3; i++) {
+    EXPECT_EQ(art_tree.Delete(keys[i]), true);
+  }
+  for (int i = 0; i < 3; i++) {
+    std::string value;
+    EXPECT_EQ(art_tree.Find(keys[i], &value), false);
+  }
+
+  for (int i = 3; i < 6; i++) {
+    std::string value;
+    EXPECT_EQ(art_tree.Find(keys[i], &value), true);
+    EXPECT_EQ(value, std::to_string(i));
+  }
+}
+
 TEST(RandomTest, RandomTest) {
   // TODO优化，没有解决key冲突的情况，但这个范围一般来说不会冲突
   constexpr uint32_t kMaxKeyLength = 20;
-  constexpr uint32_t kMaxKey = 10000;
+  constexpr uint32_t kMaxKey = 1000000;
   std::vector<std::string> keys(kMaxKey * 2);
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -72,6 +95,18 @@ TEST(RandomTest, RandomTest) {
     EXPECT_EQ(art_tree.Upsert(keys[i], std::to_string(i)), true);
   }
   for (int i = 0; i < kMaxKey * 2; i++) {
+    std::string value;
+    EXPECT_EQ(art_tree.Find(keys[i], &value), true);
+    EXPECT_EQ(value, std::to_string(i));
+  }
+  for (int i = 0; i < kMaxKey; i++) {
+    EXPECT_EQ(art_tree.Delete(keys[i]), true);
+  }
+  for (int i = 0; i < kMaxKey; i++) {
+    std::string value;
+    EXPECT_EQ(art_tree.Find(keys[i], &value), false);
+  }
+  for (int i = kMaxKey; i < kMaxKey * 2; i++) {
     std::string value;
     EXPECT_EQ(art_tree.Find(keys[i], &value), true);
     EXPECT_EQ(value, std::to_string(i));
