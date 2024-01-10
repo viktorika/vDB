@@ -2,7 +2,6 @@
 #include <iostream>
 #include <random>
 #include <string>
-#include <unordered_map>
 
 #include "art.h"
 #include "gtest/gtest.h"

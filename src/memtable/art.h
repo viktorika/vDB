@@ -9,7 +9,10 @@ namespace vDB {
 template <class ValueType>
 class Art {
  public:
-  // TODO copyconstruct, deconstruct
+  Art() = default;
+  Art(const Art &) = delete;
+  Art(Art &&) = default;
+  ~Art();
 
   // 查找
   bool Find(std::string_view key, ValueType *value);
@@ -41,6 +44,14 @@ class Art {
 
   ArtNode *root_{nullptr};
 };
+
+template <class ValueType>
+Art<ValueType>::~Art() {
+  if (unlikely(root_ == nullptr)) {
+    return;
+  }
+  ArtNodeHelper::DestroyTree<ValueType>(root_);
+}
 
 template <class ValueType>
 bool Art<ValueType>::Find(std::string_view key, ValueType *value) {
