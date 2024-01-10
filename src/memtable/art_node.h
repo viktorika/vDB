@@ -270,7 +270,7 @@ class ArtNodeHelper {
       case Node48: {
         auto *node48 = static_cast<ArtNode48 *>(node);
         if (auto index = node48->childs_index_[static_cast<uint8_t>(find_char)]; index != -1) {
-          next_node = &node48->childs_[index];
+          next_node = &node48->childs_[static_cast<uint8_t>(index)];
           return true;
         }
       } break;
@@ -378,7 +378,7 @@ class ArtNodeHelper {
           if (node48->childs_index_[i] == -1) {
             continue;
           }
-          node256->childs_[i] = node48->childs_[node48->childs_index_[i]];
+          node256->childs_[i] = node48->childs_[static_cast<uint8_t>(node48->childs_index_[i])];
         }
         node256->childs_[next_char_index] = next_node;
         DestroyNode<ValueType>(node, node_key_ptr);
@@ -497,7 +497,7 @@ class ArtNodeHelper {
               continue;
             }
             new_node->edge_[cnt] = static_cast<char>(i);
-            new_node->childs_[cnt++] = node48->childs_[node48->childs_index_[i]];
+            new_node->childs_[cnt++] = node48->childs_[static_cast<uint8_t>(node48->childs_index_[i])];
           }
           DestroyNode<ValueType>(node, node_key_ptr);
           return new_node;
