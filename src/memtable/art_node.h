@@ -10,6 +10,7 @@
 #include <string_view>
 #include <utility>
 
+#include <emmintrin.h>
 #include "comm.h"
 
 namespace vDB {
@@ -246,7 +247,6 @@ class ArtNodeHelper {
     free(node);
   }
 
-  // TODO函数待优化
   static bool FindChild(ArtNode *node, char find_char, ArtNode **&next_node) {
     switch (node->type_) {
       case Node4: {
@@ -260,12 +260,23 @@ class ArtNodeHelper {
       } break;
       case Node16: {
         auto *node16 = static_cast<ArtNode16 *>(node);
+#ifdef __SSE2__
+        auto cmp_reg =
+            _mm_cmpeq_epi8(_mm_set1_epi8(find_char), _mm_loadu_si128(reinterpret_cast<__m128i const *>(node16->edge_)));
+        int mask = (1 << node16->child_cnt_) - 1;
+        int bitfield = _mm_movemask_epi8(cmp_reg) & mask;
+        if (bitfield > 0) {
+          next_node = &node16->childs_[__builtin_ctz(bitfield)];
+          return true;
+        }
+#else
         for (int i = 0; i < node16->child_cnt_; i++) {
           if (node16->edge_[i] == find_char) {
             next_node = &node16->childs_[i];
             return true;
           }
         }
+#endif
       } break;
       case Node48: {
         auto *node48 = static_cast<ArtNode48 *>(node);
