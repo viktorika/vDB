@@ -573,6 +573,73 @@ class ArtNodeHelper {
     DestroyNode<ValueType>(node, node_key_ptr);
     return ret;
   }
+
+  template <class ValueType>
+  static void DestroyTree(ArtNode *node) {
+    switch (node->type_) {
+      case Node4: {
+        auto *node4 = reinterpret_cast<ArtNode4 *>(node);
+        for (int i = 0; i < node4->child_cnt_; i++) {
+          DestroyTree<ValueType>(node4->childs_[i]);
+        }
+        char *node_key_ptr;
+        if (node->HasValue()) {
+          node_key_ptr = reinterpret_cast<char *>(node) + sizeof(ArtNode4) + sizeof(ValueType);
+        } else {
+          node_key_ptr = reinterpret_cast<char *>(node) + sizeof(ArtNode4);
+        }
+        DestroyNode<ValueType>(node, node_key_ptr);
+      } break;
+      case Node16: {
+        auto *node16 = reinterpret_cast<ArtNode16 *>(node);
+        for (int i = 0; i < node16->child_cnt_; i++) {
+          DestroyTree<ValueType>(node16->childs_[i]);
+        }
+        char *node_key_ptr;
+        if (node->HasValue()) {
+          node_key_ptr = reinterpret_cast<char *>(node) + sizeof(ArtNode16) + sizeof(ValueType);
+        } else {
+          node_key_ptr = reinterpret_cast<char *>(node) + sizeof(ArtNode16);
+        }
+        DestroyNode<ValueType>(node, node_key_ptr);
+      } break;
+      case Node48: {
+        auto *node48 = reinterpret_cast<ArtNode48 *>(node);
+        for (int i = 0; i < node48->child_cnt_; i++) {
+          DestroyTree<ValueType>(node48->childs_[i]);
+        }
+        char *node_key_ptr;
+        if (node->HasValue()) {
+          node_key_ptr = reinterpret_cast<char *>(node) + sizeof(ArtNode48) + sizeof(ValueType);
+        } else {
+          node_key_ptr = reinterpret_cast<char *>(node) + sizeof(ArtNode48);
+        }
+        DestroyNode<ValueType>(node, node_key_ptr);
+      } break;
+      case Node256: {
+        auto *node256 = reinterpret_cast<ArtNode256 *>(node);
+        for (int i = 0; i < kTwoFiveSix; i++) {
+          if (nullptr == node256->childs_[i]) {
+            continue;
+          }
+          DestroyTree<ValueType>(node256->childs_[i]);
+        }
+        char *node_key_ptr;
+        if (node->HasValue()) {
+          node_key_ptr = reinterpret_cast<char *>(node) + sizeof(ArtNode256) + sizeof(ValueType);
+        } else {
+          node_key_ptr = reinterpret_cast<char *>(node) + sizeof(ArtNode256);
+        }
+        DestroyNode<ValueType>(node, node_key_ptr);
+      } break;
+      case LeafNode: {
+        char *node_key_ptr = reinterpret_cast<char *>(node) + sizeof(ArtLeafNode) + sizeof(ValueType);
+        DestroyNode<ValueType>(node, node_key_ptr);
+      } break;
+      default:
+        assert(false);
+    }
+  }
 };
 
 }  // namespace vDB
