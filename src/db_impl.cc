@@ -20,7 +20,7 @@ DBImpl::DBImpl(const Options& options, const std::string_view name) : db_name_(n
 DBImpl::~DBImpl() {}
 
 Status DBImpl::Put(const WriteOptions& options, const std::string_view key, const std::string& value) {
-  Vrt<std::string, false, 1> vrt;
+  vrt_.Upsert(key, value);
   return Status::OK();
 }
 

@@ -2,11 +2,14 @@
  * @Author: victorika
  * @Date: 2024-05-15 16:23:26
  * @Last Modified by: victorika
- * @Last Modified time: 2024-05-15 16:59:29
+ * @Last Modified time: 2024-05-20 15:35:58
  */
 #pragma once
 
+#include <string>
 #include "db.h"
+#include "memtable/vrt.h"
+#include "status.h"
 
 namespace vdb {
 
@@ -21,7 +24,7 @@ class DBImpl : public DB {
 
  private:
   std::string db_name_;
-  Vrt<std::string, false, 1> vrt;
+  Vrt<std::string, false, 100> vrt_;  // TODO需要把第三个参数写进编译配置里
 };
 
 }  // namespace vdb

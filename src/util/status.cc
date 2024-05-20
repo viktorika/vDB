@@ -6,6 +6,7 @@
  */
 
 #include "status.h"
+#include <string>
 
 namespace vdb {
 

@@ -9,7 +9,6 @@
 #include <memory>
 #include "options.h"
 #include "status.h"
-#include "write_batch.h"
 
 namespace vdb {
 

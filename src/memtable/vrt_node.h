@@ -14,7 +14,7 @@
 #include <string>
 #include <string_view>
 #include "util/spin_lock.h"
-#include "vrt_comm.h"
+#include "comm.h"
 
 namespace vdb {
 
